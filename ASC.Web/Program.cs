@@ -35,6 +35,9 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddRazorPages();
 
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession();
+
 builder.Services.AddTransient<IEmailSender, AuthMessageSender>();
 builder.Services.AddTransient<ISmsSender, AuthMessageSender>();
 
@@ -59,7 +62,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseSession();
 app.UseAuthorization();
 
 app.MapControllerRoute(

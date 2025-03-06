@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASC.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250228033944_migrations add Initial")]
-    partial class migrationsaddInitial
+    [Migration("20250303122754_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -97,6 +97,23 @@ namespace ASC.Web.Migrations
                     b.HasKey("PartitionKey", "RowKey");
 
                     b.ToTable("MasterDataValues");
+                });
+
+            modelBuilder.Entity("ASC.Model.Models.Product", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductId"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ProductId");
+
+                    b.ToTable("Products");
                 });
 
             modelBuilder.Entity("ASC.Model.Models.ServiceRequest", b =>
