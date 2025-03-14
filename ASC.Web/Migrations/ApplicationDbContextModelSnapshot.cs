@@ -111,6 +111,23 @@ namespace ASC.Web.Migrations
                     b.HasKey("ProductId");
 
                     b.ToTable("Products");
+
+                    b.HasData(
+                        new
+                        {
+                            ProductId = 1,
+                            Name = "Oil Change"
+                        },
+                        new
+                        {
+                            ProductId = 2,
+                            Name = "Tire Rotation"
+                        },
+                        new
+                        {
+                            ProductId = 3,
+                            Name = "Brake Inspection"
+                        });
                 });
 
             modelBuilder.Entity("ASC.Model.Models.ServiceRequest", b =>

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ASC.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250303122754_Initial")]
-    partial class Initial
+    [Migration("20250306083849_update")]
+    partial class update
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -114,6 +114,23 @@ namespace ASC.Web.Migrations
                     b.HasKey("ProductId");
 
                     b.ToTable("Products");
+
+                    b.HasData(
+                        new
+                        {
+                            ProductId = 1,
+                            Name = "Oil Change"
+                        },
+                        new
+                        {
+                            ProductId = 2,
+                            Name = "Tire Rotation"
+                        },
+                        new
+                        {
+                            ProductId = 3,
+                            Name = "Brake Inspection"
+                        });
                 });
 
             modelBuilder.Entity("ASC.Model.Models.ServiceRequest", b =>

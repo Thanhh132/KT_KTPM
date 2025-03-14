@@ -8,39 +8,39 @@ namespace ASC.Tests.TestUtilities
 {
     public class FakeSession : ISession
     {
-        private Dictionary<string, byte[]> storageSession = new Dictionary<string, byte[]>();
+        private Dictionary<string, byte[]> _sessionStorage = new Dictionary<string, byte[]>();
 
         public bool IsAvailable => true;
         public string Id => Guid.NewGuid().ToString();
-        public IEnumerable<string> Keys => storageSession.Keys;
+        public IEnumerable<string> Keys => _sessionStorage.Keys;
 
-        public void Clear() => storageSession.Clear();
+        public void Clear() => _sessionStorage.Clear();
 
         public Task CommitAsync(CancellationToken cancellationToken = default)
         {
-            return Task.CompletedTask; // Giả lập commit session
+            return Task.CompletedTask; 
         }
 
         public Task LoadAsync(CancellationToken cancellationToken = default)
         {
-            return Task.CompletedTask; // Giả lập load session
+            return Task.CompletedTask; 
         }
 
-        public void Remove(string key) => storageSession.Remove(key);
+        public void Remove(string key) => _sessionStorage.Remove(key);
 
         public void Set(string key, byte[] value)
         {
-            if (!storageSession.ContainsKey(key))
-                storageSession.Add(key, value);
+            if (!_sessionStorage.ContainsKey(key))
+                _sessionStorage.Add(key, value);
             else
-                storageSession[key] = value;
+                _sessionStorage[key] = value;
         }
 
         public bool TryGetValue(string key, out byte[] value)
         {
-            if (storageSession.ContainsKey(key) && storageSession[key] != null)
+            if (_sessionStorage.ContainsKey(key) && _sessionStorage[key] != null)
             {
-                value = storageSession[key];
+                value = _sessionStorage[key];
                 return true;
             }
             else
