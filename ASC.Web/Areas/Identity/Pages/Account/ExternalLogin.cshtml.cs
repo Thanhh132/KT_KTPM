@@ -12,11 +12,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using ASC.Web.Services;
 
 namespace ASC.Web.Areas.Identity.Pages.Account
 {
@@ -40,7 +40,6 @@ namespace ASC.Web.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _userManager = userManager;
             _userStore = userStore;
-            _emailStore = GetEmailStore();
             _logger = logger;
             _emailSender = emailSender;
         }
@@ -115,8 +114,16 @@ namespace ASC.Web.Areas.Identity.Pages.Account
             var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
             if (result.Succeeded)
             {
+                var user = await _userManager.FindByLoginAsync(info.LoginProvider, info.ProviderKey);
+                var list = await _userManager.GetClaimsAsync(user);
+                var isActive = Boolean.Parse(list.SingleOrDefault(p => p.Type == "IsActive")?.Value ?? "true"); // Fallback to true if claim is missing
+                if (!isActive)
+                {
+                    ModelState.AddModelError(string.Empty, "Account has been locked");
+                    return Page();
+                }
                 _logger.LogInformation("{Name} logged in with {LoginProvider} provider.", info.Principal.Identity.Name, info.LoginProvider);
-                return LocalRedirect(returnUrl);
+                return RedirectToRoute("areaRoute", new { area = "ServiceRequests", controller = "Dashboard", action = "Dashboard" });
             }
             if (result.IsLockedOut)
             {
@@ -134,10 +141,9 @@ namespace ASC.Web.Areas.Identity.Pages.Account
                         Email = info.Principal.FindFirstValue(ClaimTypes.Email)
                     };
                 }
-                return Page();
+                return Page(); // Render the page instead of redirecting
             }
         }
-
         public async Task<IActionResult> OnPostConfirmationAsync(string returnUrl = null)
         {
             returnUrl = returnUrl ?? Url.Content("~/");
@@ -151,14 +157,17 @@ namespace ASC.Web.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                var user = CreateUser();
-
-                await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
-                await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+                var user = new IdentityUser { UserName = Input.Email, Email = Input.Email };
 
                 var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {
+                    await _userManager.AddToRoleAsync(user, "User");
+                    await _userManager.AddClaimsAsync(user, new List<System.Security.Claims.Claim>
+                    {
+                        new System.Security.Claims.Claim("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress", user.Email),
+                        new System.Security.Claims.Claim("IsActive", "true")
+                    });
                     result = await _userManager.AddLoginAsync(user, info);
                     if (result.Succeeded)
                     {
@@ -183,7 +192,8 @@ namespace ASC.Web.Areas.Identity.Pages.Account
                         }
 
                         await _signInManager.SignInAsync(user, isPersistent: false, info.LoginProvider);
-                        return LocalRedirect(returnUrl);
+                        _logger.LogInformation(6, "User created an account using {Name} provier", info.LoginProvider);
+                        return RedirectToRoute("areaRoute", new { area = "ServiceRequests", controller = "Dashboard", action = "Dashboard" });
                     }
                 }
                 foreach (var error in result.Errors)
@@ -211,13 +221,6 @@ namespace ASC.Web.Areas.Identity.Pages.Account
             }
         }
 
-        private IUserEmailStore<IdentityUser> GetEmailStore()
-        {
-            if (!_userManager.SupportsUserEmail)
-            {
-                throw new NotSupportedException("The default UI requires a user store with email support.");
-            }
-            return (IUserEmailStore<IdentityUser>)_userStore;
-        }
+       
     }
 }
