@@ -62,6 +62,7 @@ namespace ASC.Web.Areas.Configuration.Controllers
             if (masterKeys.IsEdit)
             {
                 // Update Master Key
+                masterKey.UpdatedBy = HttpContext.User.GetCurrentUserDetails().Name;
                 await _masterData.UpdateMasterKeyAsync(masterKeys.MasterKeyInContext.PartitionKey, masterKey);
             }
             else
@@ -69,6 +70,7 @@ namespace ASC.Web.Areas.Configuration.Controllers
                 // Insert Master Key
                 masterKey.RowKey = Guid.NewGuid().ToString();
                 masterKey.PartitionKey = masterKey.Name;
+                masterKey.CreatedBy = HttpContext.User.GetCurrentUserDetails().Name;
                 await _masterData.InsertMasterKeyAsync(masterKey);
             }
 
@@ -108,13 +110,14 @@ namespace ASC.Web.Areas.Configuration.Controllers
             if (isEdit)
             {
                 // Update Master Value
+                masterDataValue.UpdatedBy = HttpContext.User.GetCurrentUserDetails().Name;
                 await _masterData.UpdateMasterValueAsync(masterDataValue.PartitionKey, masterDataValue.RowKey, masterDataValue);
             }
             else
             {
                 // Insert Master Value
                 masterDataValue.RowKey = Guid.NewGuid().ToString();
-                masterDataValue.PartitionKey = MasterDataValue.Equals(masterValue.PartitionKey, null) ? masterValue.Name : masterValue.PartitionKey;
+                masterDataValue.CreatedBy = HttpContext.User.GetCurrentUserDetails().Name;               
                 await _masterData.InsertMasterValueAsync(masterDataValue);
             }
 
@@ -123,7 +126,6 @@ namespace ASC.Web.Areas.Configuration.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Route("Configuration/MasterData/UploadExcel")]
         public async Task<IActionResult> UploadExcel()
         {
             var files = Request.Form.Files;
@@ -158,7 +160,7 @@ namespace ASC.Web.Areas.Configuration.Controllers
                 using (ExcelPackage package = new ExcelPackage(memoryStream))
                 {
                     // Get the first Excel sheet from the Workbook
-                    ExcelWorksheet worksheet = package.Workbook.Worksheets[1];
+                    ExcelWorksheet worksheet = package.Workbook.Worksheets[0];
                     int rowCount = worksheet.Dimension.Rows;
 
                     // Iterate all the rows and create the list of MasterDataValue
